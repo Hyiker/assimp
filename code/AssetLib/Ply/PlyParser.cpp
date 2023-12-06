@@ -305,7 +305,7 @@ bool PLY::Element::ParseElement(IOStreamBuffer<char> &streamBuffer, std::vector<
 
     // now parse all properties of the element
     while (true) {
-        streamBuffer.getNextLine(buffer);
+        streamBuffer.getNextLine(buffer, 1);
         pCur = (char *)&buffer[0];
 
         // skip all comments and go to next line

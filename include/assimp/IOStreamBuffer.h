@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #pragma once
+#include <limits>
 #ifndef AI_IOSTREAMBUFFER_H_INC
 #define AI_IOSTREAMBUFFER_H_INC
 
@@ -110,6 +111,12 @@ public:
     /// @param  buffer      The buffer for the next line.
     /// @return true if successful.
     bool getNextLine(std::vector<T> &buffer);
+
+    /// @brief  Will read the next line ascii or binary end line char, consuming up to a specified number of trailing \n and \r characters.
+    /// @param  buffer      The buffer for the next line.
+    /// @param  maxEndl     The maximum number of trailing \n and \r characters to consume.
+    /// @return true if successful.
+    bool getNextLine(std::vector<T> &buffer, size_t maxEndl);
 
     /// @brief  Will read the next block.
     /// @param  buffer      The buffer for the next block.
@@ -280,12 +287,18 @@ AI_FORCE_INLINE bool IOStreamBuffer<T>::getNextDataLine(std::vector<T> &buffer, 
     return true;
 }
 
+
 static AI_FORCE_INLINE bool isEndOfCache(size_t pos, size_t cacheSize) {
     return (pos == cacheSize);
 }
 
 template <class T>
 AI_FORCE_INLINE bool IOStreamBuffer<T>::getNextLine(std::vector<T> &buffer) {
+    return getNextLine(buffer, std::numeric_limits<size_t>::max());
+}
+
+template <class T>
+AI_FORCE_INLINE bool IOStreamBuffer<T>::getNextLine(std::vector<T> &buffer, size_t maxEndl){
     buffer.resize(m_cacheSize);
     if (m_cachePos >= m_cacheSize || 0 == m_filePos) {
         if (!readNextBlock()) {
@@ -323,8 +336,9 @@ AI_FORCE_INLINE bool IOStreamBuffer<T>::getNextLine(std::vector<T> &buffer) {
         }
     }
     buffer[i] = '\n';
-    while (m_cachePos < m_cacheSize && (m_cache[m_cachePos] == '\r' || m_cache[m_cachePos] == '\n')) {
+    while (maxEndl && m_cachePos < m_cacheSize && (m_cache[m_cachePos] == '\r' || m_cache[m_cachePos] == '\n')) {
         ++m_cachePos;
+        --maxEndl;
     }
 
     return true;
